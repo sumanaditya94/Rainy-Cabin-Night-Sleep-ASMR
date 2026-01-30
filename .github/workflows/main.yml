@@ -1,0 +1,27 @@
+name: Night Stream (3rd Feb 10:30 PM - 4:30 AM)
+
+on:
+  schedule:
+    # 10:30 PM IST = 5:00 PM UTC (17:00)
+    # Format: minute hour day month day_of_week
+    - cron: '00 17 3 2 *'
+  workflow_dispatch: # ম্যানুয়ালি শুরু করার অপশন
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    # রাত ১০:৩০ থেকে ভোর ৪:৩০ পর্যন্ত মোট ৬ ঘণ্টা (৩৬০ মিনিট)
+    timeout-minutes: 360 
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Start Streaming
+        run: |
+          ffmpeg -re -stream_loop -1 -i video.mp4 \
+          -c:v libx264 -preset veryfast -b:v 3000k -maxrate 3000k -bufsize 6000k \
+          -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 \
+          -f flv "rtmp://a.rtmp.youtube.com/live2/${{ secrets.STREAM_KEY }}"
